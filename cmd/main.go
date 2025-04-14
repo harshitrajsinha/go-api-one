@@ -23,7 +23,8 @@ func main() {
 
 	// Routes handlers to accept HTTP requests
 	http.HandleFunc("/", handler.Home)
-	http.HandleFunc("/objects", handler.ListAllObjects)
+	http.HandleFunc("/api/v1/objects", handler.ListAllObjects)
+	http.HandleFunc("/api/v1/object/{id}", handler.ListSingleObject)
 
 	// route middleware
 	router := middleware.ErrorRecoveryMiddlware(middleware.LoggingMiddleware(http.DefaultServeMux))
