@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const PAGELIMIT = 5
@@ -24,9 +25,18 @@ type response struct {
 }
 
 // Get data from public API
-func getExtData(url string) ([]byte, error) {
+func getFromExtAPI(url string) ([]byte, error) {
 
-	resp, err := http.Get(url)
+	// http client to make request
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -94,12 +104,12 @@ func ListAllObjects(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get Object list from public API
-	bodyData, err := getExtData("https://api.restful-api.dev/objects")
+	bodyData, err := getFromExtAPI("https://api.restful-api.dev/objects")
 	if err != nil {
 		panic(err)
 	}
 	var responseData []objectList
-	err = json.Unmarshal(bodyData, &responseData)
+	err = json.NewDecoder(strings.NewReader(string(bodyData))).Decode(&responseData)
 	if err != nil {
 		panic(err)
 	}
@@ -124,7 +134,6 @@ func ListAllObjects(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var totalPages = int(math.Ceil(float64(len(responseData)) / float64(PAGELIMIT)))
-	log.Println(totalPages)
 	var totalRecords = len(responseData)
 
 	responseData = responseData[offset:end]
@@ -153,11 +162,12 @@ func ListSingleObject(w http.ResponseWriter, r *http.Request) {
 	id := parts[(len(parts) - 1)]
 
 	// Get object of particular id
-	bodyData, err := getExtData("https://api.restful-api.dev/objects/" + id)
+	bodyData, err := getFromExtAPI("https://api.restful-api.dev/objects/" + id)
 	if err != nil {
 		panic(err)
 	}
-	err = json.Unmarshal(bodyData, &responseData)
+
+	err = json.NewDecoder(strings.NewReader(string(bodyData))).Decode(&responseData)
 	if err != nil {
 		panic(err)
 	}

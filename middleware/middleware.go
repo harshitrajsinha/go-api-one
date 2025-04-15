@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"time"
 )
 
@@ -17,6 +18,7 @@ func ErrorRecoveryMiddlware(next http.Handler) http.Handler {
 				json.NewEncoder(w).Encode(map[string]string{
 					"error": "Internal Server Error",
 				})
+				debug.PrintStack()
 			}
 		}()
 		next.ServeHTTP(w, r)
